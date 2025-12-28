@@ -1,0 +1,14 @@
+{{ block title }}Results{{ endblock }}
+
+{{ block content }}
+<p><b>Firm size:</b> {{ group.firm_size }}</p>
+<p><b>Total firm effort:</b> {{ group.total_effort }}</p>
+<p><b>Per-capita payout:</b> {{ group.per_capita_payout | floatformat:2 }}</p>
+
+<hr>
+<p><b>Your effort to firm:</b> {{ player.effort_to_firm }}</p>
+<p><b>Your payoff (points):</b> {{ player.payoff }}</p>
+
+{{ next_button }}
+{{ endblock }}
+
