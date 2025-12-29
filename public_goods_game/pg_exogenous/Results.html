@@ -3,7 +3,8 @@
 {{ block content }}
 <p><b>Firm size:</b> {{ group.firm_size }}</p>
 <p><b>Total firm effort:</b> {{ group.total_effort }}</p>
-<p><b>Per-capita payout:</b> {{ group.per_capita_payout | floatformat:2 }}</p>
+<p><b>Per-capita payout:</b> {{ group.per_capita_payout|to2 }}
+</p>
 
 <hr>
 <p><b>Your effort to firm:</b> {{ player.effort_to_firm }}</p>
