@@ -10,24 +10,49 @@ SESSION_CONFIGS = [
         num_demo_participants=20,
         returns_type='constant'
     ),
-dict(
-    name='T1_test_small',
-    display_name="T1 TEST (small N)",
-    app_sequence=['pg_exogenous'],
-    num_demo_participants=6,
-    returns_type='constant',
-    test_mode=True,
-),
-dict(
-    name='T2_exogenous_increasing',
-    display_name="T2: Exogenous + Increasing returns",
-    app_sequence=['pg_exogenous'],
-    num_demo_participants=20,
-    returns_type='increasing',
-    a = 20.8 / (16 ** (math.log(120/20.8) / math.log(3))),
-    b = math.log(120/20.8) / math.log(3)
-,
-),
+    dict(
+        name='T1_test_small',
+        display_name="T1 TEST (small N)",
+        app_sequence=['pg_exogenous'],
+        num_demo_participants=6,
+        returns_type='constant',
+        test_mode=True,
+    ),
+    dict(
+        name='T3_test_small',
+        display_name="T3 TEST (small N)",
+        app_sequence=['pg_endogenous'],
+        num_demo_participants=4,   # try 4 or 6
+        returns_type='constant',
+        test_mode=True,
+    ),
+
+    dict(
+        name='T2_exogenous_increasing',
+        display_name="T2: Exogenous + Increasing returns",
+        app_sequence=['pg_exogenous'],
+        num_demo_participants=20,
+        returns_type='increasing',
+        a = 20.8 / (16 ** (math.log(120/20.8) / math.log(3))),
+        b = math.log(120/20.8) / math.log(3)
+    ),
+    dict(
+        name='T3_endogenous_constant',
+        display_name="T3: Endogenous + Constant returns",
+        app_sequence=['pg_endogenous'],
+        num_demo_participants=18,
+        returns_type='constant',
+    ),
+    dict(
+        name='T4_endogenous_increasing',
+        display_name="T4: Endogenous + Increasing returns",
+        app_sequence=['pg_endogenous'],
+        num_demo_participants=18,
+        returns_type='increasing',
+        a=20.8 / (16 ** (math.log(120 / 20.8) / math.log(3))),
+        b=math.log(120 / 20.8) / math.log(3),
+    ),
+
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs

@@ -1,0 +1,11 @@
+{{ block title }}After formation (debug){{ endblock }}
+{{ block content }}
+
+{% if is_autarkic %}
+    <p><b>You are autarkic this period</b> (you will earn 8 points).</p>
+{% else %}
+    <p><b>Your firm owner:</b> #{{ firm_owner_id }}</p>
+    <p><b>Your firm members:</b> {{ members }}</p>
+{% endif %}
+
+{{ endblock }}

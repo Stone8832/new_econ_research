@@ -1,0 +1,128 @@
+{{ block title }}Firm formation{{ endblock }}
+
+{{ block content }}
+
+<div class="alert alert-info">
+    Click “Apply” to join a firm. If you are the owner of a firm, you can accept/reject applicants.
+</div>
+
+<div id="alertBox" class="alert alert-warning" style="display:none;"></div>
+
+<table class="table table-sm">
+    <thead>
+    <tr>
+        <th>Firm (owner)</th>
+        <th>Status</th>
+        <th>Employed (incl. owner)</th>
+        <th>Pending applicants</th>
+        <th>Action</th>
+        <th>Owner controls</th>
+    </tr>
+    </thead>
+    <tbody id="firmsBody"></tbody>
+</table>
+
+{{ endblock }}
+
+{{ block scripts }}
+<script>
+    const myId = js_vars.my_id;
+    const maxSize = js_vars.max_size;
+
+    function showAlert(msg) {
+        const box = document.getElementById('alertBox');
+        box.textContent = msg;
+        box.style.display = msg ? 'block' : 'none';
+    }
+
+    function sendApply(owner) {
+        liveSend({type: 'apply', owner: owner});
+    }
+    function sendWithdraw(owner) {
+        liveSend({type: 'withdraw', owner: owner});
+    }
+    function sendAccept(owner, applicant) {
+        liveSend({type: 'accept', owner: owner, applicant: applicant});
+    }
+    function sendReject(owner, applicant) {
+        liveSend({type: 'reject', owner: owner, applicant: applicant});
+    }
+
+    function render(state) {
+        const firms = state.firms;
+        const employer = state.employer;   // keys are strings
+        const outgoing = state.outgoing;
+
+        const myEmployer = employer[String(myId)];
+        const myOutgoing = outgoing[String(myId)] || [];
+
+        const tbody = document.getElementById('firmsBody');
+        tbody.innerHTML = '';
+
+        for (const firm of firms) {
+            const owner = firm.owner;
+            const active = firm.active;
+            const members = firm.members;
+            const pending = firm.pending;
+            const slotsLeft = firm.slots_left;
+
+            const tr = document.createElement('tr');
+            if (!active) tr.classList.add('text-muted');
+
+            const statusText = active ? `Active (slots left: ${slotsLeft})` : 'Inactive (owner employed elsewhere)';
+
+            let actionHtml = '';
+            const iAppliedHere = myOutgoing.includes(owner);
+            const canTryApply = (myEmployer === null) && (owner !== myId) && active;
+
+            if (iAppliedHere) {
+                actionHtml = `<button class="btn btn-sm btn-secondary" onclick="sendWithdraw(${owner})">Withdraw</button>`;
+            } else if (canTryApply) {
+                actionHtml = `<button class="btn btn-sm btn-primary" onclick="sendApply(${owner})">Apply</button>`;
+            } else {
+                actionHtml = `<span class="text-muted">—</span>`;
+            }
+
+            let ownerControls = '<span class="text-muted">—</span>';
+            if (owner === myId && active) {
+                if (pending.length === 0) {
+                    ownerControls = '<span class="text-muted">(no applicants)</span>';
+                } else {
+                    ownerControls = pending.map(a => {
+                        return `
+                          <div class="mb-1">
+                            Applicant ${a}
+                            <button class="btn btn-sm btn-success" onclick="sendAccept(${owner}, ${a})">Accept</button>
+                            <button class="btn btn-sm btn-danger" onclick="sendReject(${owner}, ${a})">Reject</button>
+                          </div>`;
+                    }).join('');
+                }
+            }
+
+            tr.innerHTML = `
+                <td>#${owner}</td>
+                <td>${statusText}</td>
+                <td>${members.join(', ')}</td>
+                <td>${pending.length ? pending.join(', ') : '<span class="text-muted">none</span>'}</td>
+                <td>${actionHtml}</td>
+                <td>${ownerControls}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    // IMPORTANT: liveRecv must be global (not inside another function)
+    function liveRecv(data) {
+        if (data.alert) {
+            showAlert(data.alert);
+        }
+        if (data.state) {
+            showAlert('');
+            render(data.state);
+        }
+    }
+
+    // Now that oTree scripts are loaded, ping for initial state
+    liveSend({type: 'ping'});
+</script>
+{{ endblock }}
