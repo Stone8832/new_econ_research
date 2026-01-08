@@ -1,0 +1,151 @@
+{{ block title }}Tutorial{{ endblock }}
+
+
+{{ block content }}
+
+
+<style>
+   .card {
+       border: 1px solid #ddd;
+       border-radius: 14px;
+       padding: 14px;
+       background: #fff;
+       max-width: 780px;
+   }
+
+
+   .muted {
+       opacity: 0.8;
+   }
+
+
+   .section {
+       margin-top: 14px;
+   }
+
+
+   table {
+       border-collapse: collapse;
+       margin-top: 10px;
+       width: 100%;
+       max-width: 520px;
+   }
+
+
+   th,
+   td {
+       border: 1px solid #ddd;
+       padding: 6px 8px;
+       text-align: center;
+       font-size: 14px;
+   }
+
+
+   th {
+       background: #f7f7f7;
+   }
+</style>
+
+
+<div class="card">
+   <p class="muted">
+       You will play <strong>{{ C.NUM_ROUNDS }}</strong> rounds.
+       In each round you are placed into a <strong>firm</strong> (group) of size <strong>2–6</strong>.
+       Your firm stays the same for <strong>10 rounds</strong>, then you are reshuffled into a new firm.
+   </p>
+
+
+   <div class="section">
+       <h4>Your decision each round</h4>
+       <p>
+           You receive <strong>{{ C.ENDOWMENT }}</strong> effort units each round.
+           You choose how many units to put into the <strong>firm</strong>.
+           The rest you keep for <strong>yourself</strong>.
+       </p>
+       <ul>
+           <li><strong>Effort kept for yourself</strong> earns <strong>1 point per unit</strong>.</li>
+           <li><strong>Firm effort</strong> is added up across your firm, and the firm’s payoff is <strong>shared
+                   equally</strong> among firm members (including you).</li>
+           <li>Your individual contribution is <strong>not shown</strong> to other players.</li>
+       </ul>
+   </div>
+
+
+   <div class="section">
+       <h4>How the firm payoff works</h4>
+       <p class="muted">
+           Firm payoffs depend on your firm size. In some sessions, the firm payoff also increases more when the firm’s
+           <strong>total</strong> effort is higher. Either way, higher total firm effort generally leads to higher firm
+           payoffs.
+       </p>
+
+
+       <table>
+           <tr>
+               <th>Firm size</th>
+               <th>Per-person return (α) per firm unit</th>
+               <th>Total return (α × n)</th>
+           </tr>
+           <tr>
+               <td>2</td>
+               <td>0.65</td>
+               <td>1.30</td>
+           </tr>
+           <tr>
+               <td>3</td>
+               <td>0.55</td>
+               <td>1.65</td>
+           </tr>
+           <tr>
+               <td>4</td>
+               <td>0.49</td>
+               <td>1.96</td>
+           </tr>
+           <tr>
+               <td>5</td>
+               <td>0.45</td>
+               <td>2.24</td>
+           </tr>
+           <tr>
+               <td>6</td>
+               <td>0.42</td>
+               <td>2.50</td>
+           </tr>
+       </table>
+
+
+       <p class="muted" style="margin-top: 8px;">
+           Interpretation: each unit you contribute to the firm increases <strong>everyone’s</strong> payoff by about α
+           points,
+           and the group as a whole gains α×n points.
+       </p>
+   </div>
+
+
+   <div class="section">
+       <h4>Timing</h4>
+       <ul>
+           <li>You have <strong>{{ C.DECISION_SECONDS }}</strong> seconds to decide each round.</li>
+           <li>If time runs out, your firm contribution is set to <strong>0</strong>.</li>
+           <li>After each decision, there is a short info screen where you can see <strong>per-person outcomes</strong>
+               by firm size.</li>
+       </ul>
+   </div>
+
+
+   <div class="section">
+       <h4>Payments</h4>
+       <p class="muted">
+           You earn points during the experiment. Points are converted to cash at the end.
+       </p>
+   </div>
+
+
+   <div class="section">
+       {{ next_button }}
+   </div>
+</div>
+
+
+{{ endblock }}
+
