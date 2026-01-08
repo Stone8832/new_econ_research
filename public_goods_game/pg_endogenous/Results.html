@@ -1,0 +1,17 @@
+{{ block title }}Results{{ endblock }}
+{{ block content }}
+
+{% if is_autarkic %}
+  <p><b>You are autarkic this period.</b> You earn {{ C.ENDOWMENT }} points.</p>
+{% else %}
+  <p><b>Firm size:</b> {{ firm_size }}</p>
+  <p><b>Members:</b> {{ members }}</p>
+  <p><b>Total firm effort:</b> {{ group.total_effort }}</p>
+  <p><b>Per-capita payout:</b> {{ group.per_capita_payout|to2 }}</p>
+  <hr>
+  <p><b>Your effort to firm:</b> {{ player.effort_to_firm }}</p>
+  <p><b>Your payoff (points):</b> {{ player.payoff|to2 }}</p>
+{% endif %}
+
+{{ next_button }}
+{{ endblock }}

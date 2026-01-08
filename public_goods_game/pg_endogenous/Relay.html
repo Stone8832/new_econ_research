@@ -1,0 +1,25 @@
+{{ block title }}Information Relay{{ endblock }}
+{{ block content }}
+
+<p>This screen advances automatically.</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Firm size</th>
+      <th>Per-capita effort</th>
+      <th>Per-capita payout</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.firm_size }}</td>
+      <td>{{ r.per_capita_effort|to2 }}</td>
+      <td>{{ r.per_capita_payout|to2 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{{ endblock }}
