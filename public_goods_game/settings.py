@@ -22,11 +22,11 @@ SESSION_CONFIGS = [
         name='T3_bots_small',
         display_name="T3 bots small",
         app_sequence=['pg_endogenous'],
-        num_demo_participants=4,
+        num_demo_participants=3,
         returns_type='constant',
         test_mode=True,
-        formation_seconds=1,
-        info_seconds=1,
+        formation_seconds=120,
+        info_seconds=120,
     ),
 
     dict(

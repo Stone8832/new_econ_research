@@ -76,9 +76,9 @@
             const canTryApply = (myEmployer === null) && (owner !== myId) && active;
 
             if (iAppliedHere) {
-                actionHtml = `<button class="btn btn-sm btn-secondary" onclick="sendWithdraw(${owner})">Withdraw</button>`;
+                actionHtml = `<button type="button" class="btn btn-sm btn-secondary" onclick="sendWithdraw(${owner})">Withdraw</button>`;
             } else if (canTryApply) {
-                actionHtml = `<button class="btn btn-sm btn-primary" onclick="sendApply(${owner})">Apply</button>`;
+                actionHtml = `<button type="button" class="btn btn-sm btn-primary" onclick="sendApply(${owner})">Apply</button>`;
             } else {
                 actionHtml = `<span class="text-muted">—</span>`;
             }
@@ -92,8 +92,8 @@
                         return `
                           <div class="mb-1">
                             Applicant ${a}
-                            <button class="btn btn-sm btn-success" onclick="sendAccept(${owner}, ${a})">Accept</button>
-                            <button class="btn btn-sm btn-danger" onclick="sendReject(${owner}, ${a})">Reject</button>
+                            <button type="button" class="btn btn-sm btn-success" onclick="sendAccept(${owner}, ${a})">Accept</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="sendReject(${owner}, ${a})">Reject</button>
                           </div>`;
                     }).join('');
                 }
@@ -111,8 +111,8 @@
         }
     }
 
-    // IMPORTANT: liveRecv must be global (not inside another function)
-    function liveRecv(data) {
+    // Make liveRecv explicitly global
+    window.liveRecv = function(data) {
         if (data.alert) {
             showAlert(data.alert);
         }
@@ -122,7 +122,7 @@
         }
     }
 
-    // Now that oTree scripts are loaded, ping for initial state
+    // ping for initial state
     liveSend({type: 'ping'});
 </script>
 {{ endblock }}

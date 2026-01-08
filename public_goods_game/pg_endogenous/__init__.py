@@ -43,6 +43,8 @@ class Player(BasePlayer):
     # decision
     effort_to_firm = models.IntegerField(min=0, max=C.ENDOWMENT, initial=0)
 
+    was_terminated = models.BooleanField(initial=False)
+
 
 # ---------------------------
 # Formation state (JSON)
@@ -134,6 +136,12 @@ def creating_session(subsession: Subsession):
 # Live formation
 # ---------------------------
 
+def get_player_by_subsession_id(subsession: Subsession, pid: int) -> Player:
+    for p in subsession.get_players():
+        if p.id_in_subsession == pid:
+            return p
+    raise Exception(f"Player id_in_subsession={pid} not found")
+
 def live_formation(player: Player, data):
     subsession = player.subsession
     state = _get_state(subsession)
@@ -143,7 +151,12 @@ def live_formation(player: Player, data):
     msg_type = data.get('type')
 
     def deny(msg):
-        return {player.id_in_group: dict(alert=msg), 0: dict(state=_build_payload(subsession, state))}
+        return {
+            player.id_in_group: dict(
+                alert=msg,
+                state=_build_payload(subsession, state),
+            )
+        }
 
     if msg_type == 'ping':
         return {player.id_in_group: dict(state=_build_payload(subsession, state))}
@@ -207,20 +220,41 @@ def live_formation(player: Player, data):
         # applicant’s own firm becomes inactive; reject incoming apps
         _auto_reject_incoming_if_owner_becomes_inactive(state, applicant)
 
+
     elif msg_type == 'reject':
+
         owner = int(data.get('owner', 0))
+
         applicant = int(data.get('applicant', 0))
+
         if owner != pid:
             return deny("Only the firm owner can reject applicants to this firm.")
+
         if applicant not in pending[str(owner)]:
             return deny("That application is not pending.")
+
         pending[str(owner)].remove(applicant)
+
         state['rejections'].append(dict(applicant=applicant, owner=owner, reason='rejected'))
 
+        # --- TERMINATION FLAG ---
+
+        if subsession.round_number > 1:
+
+            app_p = get_player_by_subsession_id(subsession, applicant)
+
+            prev_p = app_p.in_round(subsession.round_number - 1)
+
+            if (not prev_p.is_autarkic) and (prev_p.firm_owner_id == owner):
+                prev_p.was_terminated = True
+
+
     else:
+
         return deny("Unknown action.")
 
     _set_state(subsession, state)
+
     return {0: dict(state=_build_payload(subsession, state))}
 
 
