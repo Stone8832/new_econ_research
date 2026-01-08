@@ -19,12 +19,14 @@ SESSION_CONFIGS = [
         test_mode=True,
     ),
     dict(
-        name='T3_test_small',
-        display_name="T3 TEST (small N)",
+        name='T3_bots_small',
+        display_name="T3 bots small",
         app_sequence=['pg_endogenous'],
-        num_demo_participants=4,   # try 4 or 6
+        num_demo_participants=4,
         returns_type='constant',
         test_mode=True,
+        formation_seconds=1,
+        info_seconds=1,
     ),
 
     dict(
