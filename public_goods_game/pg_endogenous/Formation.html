@@ -8,6 +8,18 @@
 
 <div id="alertBox" class="alert alert-warning" style="display:none;"></div>
 
+<!-- Resume panel -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="mb-2">
+            <b>View resume:</b>
+            <select id="resumeSelect" class="form-select form-select-sm"
+                    style="max-width: 260px; display:inline-block;"></select>
+        </div>
+        <div id="resumeArea" class="text-muted">Waiting for data...</div>
+    </div>
+</div>
+
 <table class="table table-sm">
     <thead>
     <tr>
@@ -29,10 +41,19 @@
     const myId = js_vars.my_id;
     const maxSize = js_vars.max_size;
 
+    let latestState = null;
+
     function showAlert(msg) {
         const box = document.getElementById('alertBox');
         box.textContent = msg;
         box.style.display = msg ? 'block' : 'none';
+    }
+
+    function fmt2(x) {
+        if (x === null || x === undefined) return '';
+        const num = Number(x);
+        if (Number.isNaN(num)) return '';
+        return num.toFixed(2);
     }
 
     function sendApply(owner) {
@@ -48,7 +69,71 @@
         liveSend({type: 'reject', owner: owner, applicant: applicant});
     }
 
+    function renderResume() {
+        if (!latestState) return;
+
+        const sel = document.getElementById('resumeSelect');
+        const targetId = String(sel.value);
+
+        const resumes = latestState.resumes || {};
+        const hist = resumes[targetId] || [];
+
+        if (!hist.length) {
+            document.getElementById('resumeArea').innerHTML = `<div class="text-muted">No history yet.</div>`;
+            return;
+        }
+
+        const rows = hist.map(r => `
+            <tr>
+                <td>${r.round}</td>
+                <td>${r.firm_owner_id ?? 0}</td>
+                <td>${r.firm_size ?? ''}</td>
+                <td>${r.firm_members ?? ''}</td>
+                <td>${fmt2(r.per_capita_effort)}</td>
+                <td>${fmt2(r.per_capita_payout)}</td>
+                <td>${r.was_terminated ? 'YES' : ''}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('resumeArea').innerHTML = `
+            <table class="table table-sm">
+                <thead>
+                <tr>
+                    <th>Period</th>
+                    <th>Firm owner</th>
+                    <th>Size</th>
+                    <th>Members</th>
+                    <th>Per-capita effort</th>
+                    <th>Per-capita payout</th>
+                    <th>Terminated</th>
+                </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    function ensureResumeDropdown(state) {
+        const sel = document.getElementById('resumeSelect');
+        if (sel.options.length > 0) return;
+
+        const ids = state.all_ids || [];
+        for (const id of ids) {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = `Participant ${id}`;
+            sel.appendChild(opt);
+        }
+        sel.value = String(myId);
+        sel.addEventListener('change', renderResume);
+    }
+
     function render(state) {
+        latestState = state;
+
+        ensureResumeDropdown(state);
+        renderResume();
+
         const firms = state.firms;
         const employer = state.employer;   // keys are strings
         const outgoing = state.outgoing;

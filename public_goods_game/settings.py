@@ -54,6 +54,18 @@ SESSION_CONFIGS = [
         a=20.8 / (16 ** (math.log(120 / 20.8) / math.log(3))),
         b=math.log(120 / 20.8) / math.log(3),
     ),
+    dict(
+        name='T4_test_small',
+        display_name="T4 TESTtre (small N)",
+        app_sequence=['pg_endogenous'],
+        num_demo_participants=3,
+        returns_type='increasing',
+        test_mode=True,
+        formation_seconds=60,
+        info_seconds=30,
+        a=20.8 / (16 ** (math.log(120 / 20.8) / math.log(3))),
+        b=math.log(120 / 20.8) / math.log(3),
+    ),
 
 ]
 
