@@ -1,24 +1,212 @@
 {{ block title }}Information Relay{{ endblock }}
 
-{{ block content }}
-<p>This screen will advance automatically.</p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Firm size</th>
-            <th>Per-capita effort</th>
-            <th>Per-capita payout</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for r in rows %}
-        <tr>
-            <td>{{ r.firm_size }}</td>
-            <td>{{ r.per_capita_effort|to2  }}</td>
-            <td>{{ r.per_capita_payout|to2  }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{{ block content }}
+{{ include "pg_exogenous/_scorebar.html" }}
+
+
+<style>
+   .wrap {
+       max-width: 980px;
+       margin: 0 auto;
+   }
+
+
+   .topline {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       margin-bottom: 12px;
+       opacity: 0.85;
+   }
+
+
+   .pill {
+       display: inline-block;
+       padding: 3px 10px;
+       border: 1px solid #ddd;
+       border-radius: 999px;
+       font-size: 12px;
+       background: #fff;
+   }
+
+
+   .hint {
+       margin: 8px 0 14px;
+       opacity: 0.8;
+       font-size: 14px;
+       line-height: 1.35;
+   }
+
+
+   .grid {
+       display: grid;
+       grid-template-columns: repeat(5, 1fr);
+       gap: 12px;
+   }
+
+
+   @media (max-width: 1100px) {
+       .grid {
+           grid-template-columns: repeat(2, 1fr);
+       }
+   }
+
+
+   @media (max-width: 620px) {
+       .grid {
+           grid-template-columns: 1fr;
+       }
+   }
+
+
+   .card {
+       border: 1px solid #ddd;
+       border-radius: 16px;
+       background: #fff;
+       padding: 14px;
+   }
+
+
+   /* Highlight for player's firm */
+   .card.me {
+       border: 2px solid #333;
+       background: #f7f7f7;
+   }
+
+
+   .me-badge {
+       display: inline-block;
+       padding: 2px 9px;
+       border-radius: 999px;
+       font-size: 12px;
+       font-weight: 800;
+       border: 1px solid #333;
+       background: #fff;
+       margin-left: 6px;
+   }
+
+
+   .header {
+       display: flex;
+       justify-content: space-between;
+       align-items: flex-start;
+       margin-bottom: 10px;
+   }
+
+
+   .firm-title {
+       font-weight: 900;
+       font-size: 16px;
+       line-height: 1.1;
+   }
+
+
+   .firm-sub {
+       opacity: 0.7;
+       font-size: 12px;
+       margin-top: 4px;
+   }
+
+
+   .metric {
+       margin-top: 10px;
+       padding-top: 10px;
+       border-top: 1px solid #eee;
+   }
+
+
+   .metric-label {
+       font-weight: 700;
+       font-size: 12px;
+       opacity: 0.75;
+   }
+
+
+   .metric-value {
+       font-weight: 900;
+       font-size: 22px;
+       margin-top: 3px;
+   }
+
+
+   .note {
+       margin-top: 10px;
+       font-size: 12px;
+       opacity: 0.75;
+       line-height: 1.25;
+   }
+
+
+   .divider {
+       margin: 14px 0;
+       border-top: 1px solid #e6e6e6;
+   }
+</style>
+
+
+<div class="wrap">
+
+
+   <div class="topline">
+       <div class="pill">Round {{ player.round_number }} / {{ C.NUM_ROUNDS }}</div>
+       <div class="pill">This screen lasts {{ C.INFO_SECONDS }} seconds</div>
+   </div>
+
+
+   <div class="hint">
+       Below are the outcomes for each firm this round. This helps you compare how firms performed.
+       Individual contributions are not shown — only per-person outcomes by firm.
+   </div>
+
+
+   <div class="grid">
+       {{ for r in rows }}
+       <div class="card {{ if r.firm_id == my_firm_id }}me{{ endif }}">
+           <div class="header">
+               <div>
+                   <div class="firm-title">
+                       Firm {{ r.firm_id }}
+                       {{ if r.firm_id == my_firm_id }}<span class="me-badge">your firm</span>{{ endif }}
+                   </div>
+                   <div class="firm-sub">Per-person outcomes</div>
+               </div>
+
+
+               <div class="pill">{{ r.firm_size }} people</div>
+           </div>
+
+
+           <div class="metric">
+               <div class="metric-label">Per-capita effort committed</div>
+               <div class="metric-value">{{ r.per_capita_effort_disp }}</div>
+           </div>
+
+
+           <div class="metric">
+               <div class="metric-label">Per-capita payout</div>
+               <div class="metric-value">{{ r.per_capita_payout_disp }} pts</div>
+           </div>
+
+
+           <div class="note">
+               Higher total firm effort usually increases the per-person payout.
+           </div>
+       </div>
+       {{ endfor }}
+   </div>
+
+
+   <div class="divider"></div>
+
+
+   <div class="hint" style="margin-bottom:0;">
+       You will automatically continue when the timer ends.
+   </div>
+
+
+</div>
+
+
 {{ endblock }}
+

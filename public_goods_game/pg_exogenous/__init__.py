@@ -6,6 +6,8 @@ import random
 import math
 
 
+
+
 doc = """
 Treatment 1: Exogenous firms + internal constant returns (linear public good).
 """
@@ -37,11 +39,20 @@ class C(BaseConstants):
    EXO_SIZES = [2, 3, 4, 5, 6]  # Sums to 20
 
 
+
+
+def current_block_start(round_number: int) -> int:
+   if round_number <= 10:
+       return 1
+   elif round_number <= 20:
+       return 11
+   else:
+       return 21
+
+
+
+
 # Helper function to build valid groups
-
-
-
-
 def build_exogenous_matrix(players, sizes, current_round, max_tries=5000):
    sizes_order = sorted(sizes, reverse=True)
 
@@ -58,8 +69,7 @@ def build_exogenous_matrix(players, sizes, current_round, max_tries=5000):
            for p in remaining:
                size_by_block = p.participant.vars.get('size_by_block', {})
                # only sizes from earlier blocks (keys < current_round)
-               past_sizes = [v for k, v in size_by_block.items()
-                             if k < current_round]
+               past_sizes = [v for k, v in size_by_block.items() if k < current_round]
                if size not in past_sizes:
                    eligible.append(p)
 
@@ -80,8 +90,7 @@ def build_exogenous_matrix(players, sizes, current_round, max_tries=5000):
            return [size_to_members[s] for s in sizes]
 
 
-   raise Exception(
-       "Could not find a valid grouping without repeated firm sizes.")
+   raise Exception("Could not find a valid grouping without repeated firm sizes.")
 
 
 
@@ -112,23 +121,30 @@ def creating_session(subsession: Subsession):
            matrix = []
            i = 0
            while i < len(players):
-               matrix.append(players[i:i+2])
+               matrix.append(players[i:i + 2])
                i += 2
            subsession.set_group_matrix(matrix)
        else:
-           matrix = build_exogenous_matrix(
-               players, C.EXO_SIZES, subsession.round_number)
+           matrix = build_exogenous_matrix(players, C.EXO_SIZES, subsession.round_number)
            subsession.set_group_matrix(matrix)
 
 
            # record each participant's size assignment for this block start
            for p in subsession.get_players():
                current_size = len(p.group.get_players())
-               size_by_block = dict(
-                   p.participant.vars.get('size_by_block', {}))
-               # keys: 1, 11, 21
+               size_by_block = dict(p.participant.vars.get('size_by_block', {}))
                size_by_block[subsession.round_number] = current_size
                p.participant.vars['size_by_block'] = size_by_block
+
+
+       # Assign stable Firm IDs for this 10-round block (Firm 1..Firm K)
+       block_start = subsession.round_number
+       groups = subsession.get_groups()
+       for firm_label, g in enumerate(groups, start=1):
+           for p in g.get_players():
+               firm_by_block = dict(p.participant.vars.get('firm_by_block', {}))
+               firm_by_block[block_start] = firm_label
+               p.participant.vars['firm_by_block'] = firm_by_block
 
 
    else:
@@ -159,12 +175,12 @@ class Player(BasePlayer):
    payoff_points = models.FloatField(initial=0)
 
 
-# add your own functions here
-
-
-# Payoff function
-
-
+def total_points_so_far(player: Player) -> float:
+   # sum of payoffs from completed rounds (excludes current round)
+   total = 0
+   for r in range(1, player.round_number):
+       total += player.in_round(r).payoff
+   return total
 
 
 def set_payoffs(group: Group):
@@ -175,7 +191,9 @@ def set_payoffs(group: Group):
 
    total_effort = sum(p.effort_to_firm for p in players)
    group.total_effort = total_effort
-   group.per_capita_effort = total_effort / n if n else 0
+   group.per_capita_effort = round(total_effort / n, 2) if n else 0
+
+
 
 
    returns_type = group.session.config.get('returns_type', 'constant')
@@ -184,26 +202,70 @@ def set_payoffs(group: Group):
    # Payoffs for treatment 1 and 2, either constant or increasing
    if returns_type == 'constant':
        alpha = C.MPCR_CONSTANT[n]
-       group.per_capita_payout = alpha * total_effort
+       group.per_capita_payout = round(alpha * total_effort, 2)
+
+
    elif returns_type == 'increasing':
        a = float(group.session.config.get('a', 0.2496))
        b = float(group.session.config.get('b', 1.5952))
 
 
        output = a * (total_effort ** b) if total_effort > 0 else 0.0
-       group.per_capita_payout = output / n
+       group.per_capita_payout = round(output / n, 2)
+
+
    else:
        raise Exception(f"Unknown returns_type: {returns_type}")
 
 
    for p in players:
-       # payoff in points for now
        p.payoff = (C.ENDOWMENT - p.effort_to_firm) + group.per_capita_payout
 
 
 
 
+def set_payoffs_all_groups(subsession: Subsession):
+   for g in subsession.get_groups():
+       set_payoffs(g)
+
+
+
+
+def total_points_so_far(player: Player) -> float:
+   total = 0
+   for r in range(1, player.round_number):
+       total += player.in_round(r).payoff
+   return total
+
+
+
+
+class ResultsWaitPage(WaitPage):
+   wait_for_all_groups = True
+   template_name = 'pg_exogenous/ResultsWaitPage.html'
+   after_all_players_arrive = set_payoffs_all_groups
+
+
+   @staticmethod
+   def vars_for_template(player: Player):
+       effort_kept = C.ENDOWMENT - player.effort_to_firm
+       return dict(
+           effort_kept=effort_kept,
+           total_points_so_far=total_points_so_far(player),
+       )
+
+
+
+
 # PAGES
+class Tutorial(Page):
+   @staticmethod
+   def is_displayed(player: Player):
+       return player.round_number == 1
+
+
+
+
 class Decision(Page):
    form_model = 'player'
    form_fields = ['effort_to_firm']
@@ -211,16 +273,50 @@ class Decision(Page):
    timeout_submission = {'effort_to_firm': 0}
 
 
-
-
-class ResultsWaitPage(WaitPage):
-   after_all_players_arrive = set_payoffs
+   @staticmethod
+   def vars_for_template(player: Player):
+       return dict(
+           total_points_so_far=total_points_so_far(player),
+       )
 
 
 
 
 class Results(Page):
-   pass
+   timeout_seconds = 30
+
+
+   @staticmethod
+   def vars_for_template(player: Player):
+       group = player.group
+
+
+       effort_to_firm = player.effort_to_firm
+       effort_kept = C.ENDOWMENT - effort_to_firm
+
+
+       total_firm_effort = group.total_effort
+       firm_size = group.firm_size
+       per_capita_payout = group.per_capita_payout
+
+
+       total_payoff = player.payoff
+       selfish_payoff = effort_kept
+       payoff_if_zero = C.ENDOWMENT + per_capita_payout
+       personal_cost = payoff_if_zero - total_payoff
+
+
+       return dict(
+           effort_to_firm=effort_to_firm,
+           effort_kept=effort_kept,
+           selfish_payoff=selfish_payoff,
+           total_firm_effort=total_firm_effort,
+           firm_size=firm_size,
+           per_capita_payout=per_capita_payout,
+           total_payoff=total_payoff,
+           personal_cost=personal_cost,
+           total_points_so_far=total_points_so_far(player),
+       )
 
 
 
@@ -231,26 +327,51 @@ class Relay(Page):
 
    @staticmethod
    def vars_for_template(player: Player):
+       block_start = current_block_start(player.round_number)
+
+
+       def firm_label_for_group(g):
+           any_member = g.get_players()[0]
+           return any_member.participant.vars.get('firm_by_block', {}).get(block_start, None)
+
+
        rows = []
        for g in player.subsession.get_groups():
            rows.append(dict(
-               firm_size=len(g.get_players()),
-               per_capita_effort=g.per_capita_effort,
-               per_capita_payout=g.per_capita_payout,
-           ))
-       rows.sort(key=lambda r: r["firm_size"])
-       return dict(rows=rows)
+   firm_id=firm_label_for_group(g),
+   firm_size=len(g.get_players()),
+   per_capita_effort=g.per_capita_effort,
+   per_capita_payout=g.per_capita_payout,
+
+
+   # ✅ display versions (strings)
+   per_capita_effort_disp=f"{g.per_capita_effort:.1f}",
+   per_capita_payout_disp=f"{g.per_capita_payout:.2f}",
+))
 
 
 
 
-class Tutorial(Page):
-   pass  # basically no timeout (optional)
+       rows.sort(key=lambda r: r["firm_id"] if r["firm_id"] is not None else 999)
+
+
+       my_firm_id = player.participant.vars.get('firm_by_block', {}).get(block_start, None)
+
+
+       return dict(
+           rows=rows,
+           my_firm_id=my_firm_id,
+           total_points_so_far=total_points_so_far(player),
+       )
 
 
 
 
 page_sequence = [Tutorial, Decision, ResultsWaitPage, Results, Relay]
+
+
+
+
 
 
 

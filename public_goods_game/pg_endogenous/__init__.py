@@ -183,11 +183,7 @@ def creating_session(subsession: Subsession):
 # Live formation
 # ---------------------------
 
-def get_player_by_subsession_id(subsession: Subsession, pid: int) -> Player:
-    for p in subsession.get_players():
-        if p.id_in_subsession == pid:
-            return p
-    raise Exception(f"Player id_in_subsession={pid} not found")
+
 
 def live_formation(player: Player, data):
     subsession = player.subsession

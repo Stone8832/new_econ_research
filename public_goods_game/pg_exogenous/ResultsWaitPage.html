@@ -1,0 +1,101 @@
+{{ extends "otree/WaitPage.html" }}
+
+
+{{ block title }}Waiting for other participants{{ endblock }}
+
+
+{{ block content }}
+{{ include "pg_exogenous/_scorebar.html" }}
+
+
+<style>
+   .wait-card {
+       max-width: 640px;
+       margin: 0 auto;
+       padding: 18px;
+       border: 1px solid #ddd;
+       border-radius: 16px;
+       background: #fafafa;
+   }
+
+
+   .row {
+       display: flex;
+       justify-content: space-between;
+       padding: 10px 0;
+       border-bottom: 1px solid #e5e5e5;
+   }
+
+
+   .row:last-child {
+       border-bottom: none;
+   }
+
+
+   .label {
+       font-weight: 700;
+   }
+
+
+   .value {
+       font-weight: 800;
+   }
+
+
+   .muted {
+       margin-top: 14px;
+       font-size: 14px;
+       opacity: 0.8;
+       line-height: 1.35;
+   }
+
+
+   .spinner {
+       margin: 16px auto 0;
+       width: 28px;
+       height: 28px;
+       border: 3px solid #ddd;
+       border-top: 3px solid #666;
+       border-radius: 50%;
+       animation: spin 1s linear infinite;
+   }
+
+
+   @keyframes spin {
+       to {
+           transform: rotate(360deg);
+       }
+   }
+</style>
+
+
+<div class="wait-card">
+   <h4>Your decision this round</h4>
+
+
+   <div class="row">
+       <div class="label">Effort you put into the firm</div>
+       <div class="value">{{ player.effort_to_firm }}</div>
+   </div>
+
+
+   <div class="row">
+       <div class="label">Effort you kept for yourself</div>
+       <div class="value">{{ effort_kept }}</div>
+   </div>
+
+
+
+
+   <p class="muted">
+       Your <strong>total payoff</strong> depends on the other participants’ decisions.
+       Once everyone has submitted, you will automatically move on.
+   </p>
+
+
+   <div class="spinner"></div>
+</div>
+
+
+{{ endblock }}
+

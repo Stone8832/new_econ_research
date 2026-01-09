@@ -1,7 +1,12 @@
 {{ block title }}Decision{{ endblock }}
 
 
+
+
 {{ block content }}
+{{ include "pg_exogenous/_scorebar.html" }}
+
+
 
 
 <style>
@@ -13,6 +18,8 @@
    }
 
 
+
+
    .member-card {
        border: 1px solid #ddd;
        border-radius: 14px;
@@ -22,6 +29,8 @@
        gap: 10px;
        background: #fafafa;
    }
+
+
 
 
    .avatar {
@@ -37,10 +46,14 @@
    }
 
 
+
+
    .member-text {
        line-height: 1.25;
        flex: 1;
    }
+
+
 
 
    .member-name {
@@ -48,11 +61,15 @@
    }
 
 
+
+
    .member-sub {
        font-size: 12px;
        opacity: 0.75;
        margin-top: 2px;
    }
+
+
 
 
    .slider-wrap {
@@ -65,12 +82,16 @@
    }
 
 
+
+
    .slider-row {
        display: flex;
        align-items: center;
        gap: 10px;
        margin-top: 8px;
    }
+
+
 
 
    .slider-row output {
@@ -80,16 +101,24 @@
    }
 
 
+
+
    input[type="range"] {
        width: 100%;
    }
 </style>
 
 
+
+
 <p>You have {{ C.ENDOWMENT }} effort units.</p>
 
 
+
+
 <h4>Your firm</h4>
+
+
 
 
 <div class="firm-grid">
@@ -98,6 +127,8 @@
        <div class="avatar" data-pid="{{ p.id_in_subsession }}">
            P{{ p.id_in_subsession }}
        </div>
+
+
 
 
        <div class="member-text">
@@ -112,10 +143,14 @@
 </div>
 
 
+
+
 <form>
    <div class="slider-wrap">
        <label for="id_effort_to_firm"><strong>Effort to firm</strong></label>
        <div class="member-sub">Choose how many units (0–{{ C.ENDOWMENT }}) to allocate to your firm.</div>
+
+
 
 
        <div class="slider-row">
@@ -126,14 +161,24 @@
    </div>
 
 
+
+
    <br>
+
+
 
 
    {{ next_button }}
 </form>
 
 
+
+
 {{ endblock }}
+
+
+
+
 
 
 
