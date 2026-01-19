@@ -25,8 +25,7 @@ class C(BaseConstants):
 
 
    # Table 2: MCPR alpha by firm size n (index = n)
-   MPCR_CONSTANT = [0, 0, 0.65, 0.55, 0.49, 0.45, 0.42]
-
+   MPCR_BY_SIZE = {2: 0.65, 3: 0.55, 4: 0.49, 5: 0.45, 6: 0.42}
 
    # Timing per period to allocate effort between firm and themselves
    DECISION_SECONDS = 60
@@ -184,42 +183,38 @@ def total_points_so_far(player: Player) -> float:
 
 
 def set_payoffs(group: Group):
-   players = group.get_players()
-   n = len(players)
-   group.firm_size = n
+    players = group.get_players()
+    n = len(players)
+    group.firm_size = n
 
+    total_effort = sum(p.effort_to_firm for p in players)
+    group.total_effort = total_effort
 
-   total_effort = sum(p.effort_to_firm for p in players)
-   group.total_effort = total_effort
-   group.per_capita_effort = round(total_effort / n, 2) if n else 0
+    group.per_capita_effort = total_effort / n if n else 0
 
+    # STRICT: avoids accidental wrong treatment
+    returns_type = group.session.config['returns_type']
 
+    if returns_type == 'constant':
+        #prefer dict instead of list for safety
+        if n not in C.MPCR_BY_SIZE:
+            raise Exception(f"No MPCR specified for firm size n={n}. Check C.MPCR_BY_SIZE.")
+        alpha = C.MPCR_BY_SIZE[n]
+        per_capita_payout = alpha * total_effort
 
+    elif returns_type == 'increasing':
+        a = float(group.session.config['a'])
+        b = float(group.session.config['b'])
+        output = a * (total_effort ** b) if total_effort > 0 else 0.0
+        per_capita_payout = output / n
 
-   returns_type = group.session.config.get('returns_type', 'constant')
+    else:
+        raise Exception(f"Unknown returns_type: {returns_type}")
 
+    group.per_capita_payout = per_capita_payout
 
-   # Payoffs for treatment 1 and 2, either constant or increasing
-   if returns_type == 'constant':
-       alpha = C.MPCR_CONSTANT[n]
-       group.per_capita_payout = round(alpha * total_effort, 2)
-
-
-   elif returns_type == 'increasing':
-       a = float(group.session.config.get('a', 0.2496))
-       b = float(group.session.config.get('b', 1.5952))
-
-
-       output = a * (total_effort ** b) if total_effort > 0 else 0.0
-       group.per_capita_payout = round(output / n, 2)
-
-
-   else:
-       raise Exception(f"Unknown returns_type: {returns_type}")
-
-
-   for p in players:
-       p.payoff = (C.ENDOWMENT - p.effort_to_firm) + group.per_capita_payout
+    for p in players:
+        p.payoff = (C.ENDOWMENT - p.effort_to_firm) + per_capita_payout
 
 
 
