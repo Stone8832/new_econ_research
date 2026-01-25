@@ -1,213 +1,741 @@
-{{ block title }}Firm formation{{ endblock }}
+{% extends "global/Page.html" %}
+{% load otree static %}
 
-{{ block content }}
 
-<div class="alert alert-info">
-    Click “Apply” to join a firm. If you are the owner of a firm, you can accept/reject applicants.
+
+
+{% block title %}
+Firm Formation (Round {{ player.round_number }})
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+
+
+<style>
+   :root {
+       --blue: #cfe3f6;
+       --red: #f3b2b2;
+       --border: #222;
+       --muted: #666;
+   }
+
+
+
+
+   .top-instructions {
+       text-align: center;
+       font-size: 22px;
+       line-height: 1.25;
+       margin-bottom: 6px;
+   }
+
+
+
+
+   .sub-instructions {
+       text-align: center;
+       font-size: 16px;
+       color: var(--muted);
+       margin-bottom: 18px;
+   }
+
+
+
+
+   .layout {
+       display: grid;
+       grid-template-columns: 2.2fr 1fr;
+       gap: 18px;
+       align-items: start;
+   }
+
+
+
+
+   .firm-grid {
+       display: grid;
+       grid-template-columns: repeat(2, minmax(360px, 1fr));
+       gap: 18px;
+   }
+
+
+
+
+   .firm-card {
+       border: 2px solid var(--border);
+       background: #fff;
+       min-height: 260px;
+       position: relative;
+       user-select: none;
+   }
+
+
+
+
+   .firm-card.inactive {
+       opacity: 0.35;
+       filter: grayscale(0.35);
+   }
+
+
+
+
+   .firm-header {
+       padding: 10px 12px;
+       font-size: 20px;
+       text-align: center;
+   }
+
+
+
+
+   .firm-body {
+       background: var(--blue);
+       border-top: 2px solid var(--border);
+       border-bottom: 2px solid var(--border);
+       padding: 14px 14px 8px 14px;
+       min-height: 150px;
+       display: flex;
+       gap: 10px;
+       flex-wrap: wrap;
+       justify-content: space-around;
+       align-items: flex-end;
+   }
+
+
+
+
+   .pending-strip {
+       background: var(--red);
+       padding: 10px 12px 12px 12px;
+       min-height: 70px;
+   }
+
+
+
+
+   .pending-title {
+       font-size: 18px;
+       margin-bottom: 6px;
+   }
+
+
+
+
+   .pill-row {
+       display: flex;
+       gap: 8px;
+       flex-wrap: wrap;
+       align-items: center;
+   }
+
+
+
+
+   .badge {
+       display: inline-flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+       gap: 6px;
+       padding: 6px;
+       min-width: 120px;
+       cursor: pointer;
+   }
+
+
+
+
+   .who {
+       font-size: 18px;
+       text-align: center;
+       white-space: nowrap;
+   }
+
+
+
+
+   .avatar {
+       width: 46px;
+       height: 46px;
+   }
+
+
+
+
+   .you-tag {
+       font-weight: 700;
+   }
+
+
+
+
+   .controls {
+       margin-top: 8px;
+       display: flex;
+       gap: 6px;
+       flex-wrap: wrap;
+       justify-content: center;
+   }
+
+
+
+
+   .btn {
+       border: 1px solid #111;
+       background: #fff;
+       border-radius: 8px;
+       padding: 6px 10px;
+       font-size: 14px;
+       cursor: pointer;
+   }
+
+
+
+
+   .btn:disabled {
+       opacity: 0.5;
+       cursor: not-allowed;
+   }
+
+
+
+
+   .side {
+       border: 2px solid var(--border);
+       background: #fff;
+       padding: 12px;
+   }
+
+
+
+
+   .side h4 {
+       margin: 0 0 8px 0;
+       font-size: 18px;
+   }
+
+
+
+
+   .kvs {
+       font-size: 14px;
+       color: #222;
+       line-height: 1.35;
+   }
+
+
+
+
+   .kvs .muted {
+       color: var(--muted);
+   }
+
+
+
+
+   .alert {
+       display: none;
+       border: 1px solid #b00020;
+       background: #ffe8ea;
+       color: #7a0014;
+       padding: 10px;
+       border-radius: 10px;
+       margin-bottom: 10px;
+       font-size: 14px;
+   }
+
+
+
+
+   .resume {
+       max-height: 62vh;
+       overflow: auto;
+       border-top: 1px solid #ddd;
+       margin-top: 10px;
+       padding-top: 10px;
+       font-size: 13px;
+   }
+
+
+
+
+   .resume table {
+       width: 100%;
+       border-collapse: collapse;
+       font-size: 13px;
+   }
+
+
+
+
+   .resume th,
+   .resume td {
+       border-bottom: 1px solid #eee;
+       padding: 6px 6px;
+       text-align: left;
+       vertical-align: top;
+   }
+
+
+
+
+   .resume th {
+       position: sticky;
+       top: 0;
+       background: #fff;
+       z-index: 1;
+   }
+
+
+
+
+   .chip {
+       display: inline-block;
+       border: 1px solid #ddd;
+       border-radius: 999px;
+       padding: 2px 8px;
+       font-size: 12px;
+       background: #fafafa;
+   }
+
+
+
+
+   .mini-note {
+       font-size: 12px;
+       color: var(--muted);
+       margin-top: 8px;
+   }
+
+
+
+
+   .waiting-overlay {
+       display: none;
+       border: 2px solid #222;
+       border-radius: 12px;
+       background: #fff;
+       padding: 14px;
+       margin-bottom: 14px;
+   }
+</style>
+
+
+
+
+<div class="top-instructions">
+   You are player <b><span id="myIdText"></span></b>, you own firm <b><span id="myFirmText"></span></b>.
+   Run your firm or apply to another.
+</div>
+<div class="sub-instructions">
+   Click a player to see their resume. Click a firm tile to apply. Owners can accept/reject applicants.
 </div>
 
-<div id="alertBox" class="alert alert-warning" style="display:none;"></div>
 
-<!-- Resume panel -->
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="mb-2">
-            <b>View resume:</b>
-            <select id="resumeSelect" class="form-select form-select-sm"
-                    style="max-width: 260px; display:inline-block;"></select>
-        </div>
-        <div id="resumeArea" class="text-muted">Waiting for data...</div>
-    </div>
+
+
+<div class="layout">
+   <div>
+       <div id="alertBox" class="alert"></div>
+
+
+
+
+       <div id="waitingOverlay" class="waiting-overlay">
+           <div style="font-size:18px;">
+               <b>Accepted!</b> You are now employed by <span id="waitingFirm"></span>.
+           </div>
+           <div style="color:#666; margin-top:6px;">
+               Your choices are locked for this period. Please wait for the formation timer to end.
+           </div>
+       </div>
+
+
+
+
+       <div id="firmGrid" class="firm-grid"></div>
+
+
+
+
+       <p class="mini-note">
+           <span class="chip">Gray</span> = firm inactive (owner employed elsewhere).
+           All actions remain open until the timer ends.
+       </p>
+   </div>
+
+
+
+
+   <div class="side">
+       <h4>Your status</h4>
+       <div class="kvs" id="statusBox"></div>
+
+
+
+
+       <h4 style="margin-top:14px;">Resume</h4>
+       <div class="kvs muted" id="resumeHint">Click a player badge to view history.</div>
+       <div class="resume" id="resumeBox" style="display:none;"></div>
+   </div>
 </div>
 
-<table class="table table-sm">
-    <thead>
-    <tr>
-        <th>Firm (owner)</th>
-        <th>Status</th>
-        <th>Employed (incl. owner)</th>
-        <th>Pending applicants</th>
-        <th>Action</th>
-        <th>Owner controls</th>
-    </tr>
-    </thead>
-    <tbody id="firmsBody"></tbody>
-</table>
 
-{{ endblock }}
 
-{{ block scripts }}
+
 <script>
-    const myId = js_vars.my_id;
-    const maxSize = js_vars.max_size;
+   const MY_ID = js_vars.my_id;
+   const MAX_SIZE = js_vars.max_size;
 
-    let latestState = null;
 
-    function showAlert(msg) {
-        const box = document.getElementById('alertBox');
-        box.textContent = msg;
-        box.style.display = msg ? 'block' : 'none';
-    }
 
-    function fmt2(x) {
-        if (x === null || x === undefined) return '';
-        const num = Number(x);
-        if (Number.isNaN(num)) return '';
-        return num.toFixed(2);
-    }
 
-    function sendApply(owner) {
-        liveSend({type: 'apply', owner: owner});
-    }
-    function sendWithdraw(owner) {
-        liveSend({type: 'withdraw', owner: owner});
-    }
-    function sendAccept(owner, applicant) {
-        liveSend({type: 'accept', owner: owner, applicant: applicant});
-    }
-    function sendReject(owner, applicant) {
-        liveSend({type: 'reject', owner: owner, applicant: applicant});
-    }
+   document.getElementById('myIdText').textContent = MY_ID;
+   document.getElementById('myFirmText').textContent = MY_ID;
 
-    function renderResume() {
-        if (!latestState) return;
 
-        const sel = document.getElementById('resumeSelect');
-        const targetId = String(sel.value);
 
-        const resumes = latestState.resumes || {};
-        const hist = resumes[targetId] || [];
 
-        if (!hist.length) {
-            document.getElementById('resumeArea').innerHTML = `<div class="text-muted">No history yet.</div>`;
-            return;
-        }
+   let STATE = null;
 
-        const rows = hist.map(r => `
-            <tr>
-                <td>${r.round}</td>
-                <td>${r.firm_owner_id ?? 0}</td>
-                <td>${r.firm_size ?? ''}</td>
-                <td>${r.firm_members ?? ''}</td>
-                <td>${fmt2(r.per_capita_effort)}</td>
-                <td>${fmt2(r.per_capita_payout)}</td>
-                <td>${r.was_terminated ? 'YES' : ''}</td>
-            </tr>
-        `).join('');
 
-        document.getElementById('resumeArea').innerHTML = `
-            <table class="table table-sm">
-                <thead>
-                <tr>
-                    <th>Period</th>
-                    <th>Firm owner</th>
-                    <th>Size</th>
-                    <th>Members</th>
-                    <th>Per-capita effort</th>
-                    <th>Per-capita payout</th>
-                    <th>Terminated</th>
-                </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        `;
-    }
 
-    function ensureResumeDropdown(state) {
-        const sel = document.getElementById('resumeSelect');
-        if (sel.options.length > 0) return;
 
-        const ids = state.all_ids || [];
-        for (const id of ids) {
-            const opt = document.createElement('option');
-            opt.value = id;
-            opt.textContent = `Participant ${id}`;
-            sel.appendChild(opt);
-        }
-        sel.value = String(myId);
-        sel.addEventListener('change', renderResume);
-    }
+   function avatarSVG() {
+       return `<svg class="avatar" viewBox="0 0 64 64">
+    <circle cx="32" cy="22" r="12" fill="#111"/>
+    <path d="M10 58c2-16 14-22 22-22s20 6 22 22" fill="#111"/>
+  </svg>`;
+   }
 
-    function render(state) {
-        latestState = state;
 
-        ensureResumeDropdown(state);
-        renderResume();
 
-        const firms = state.firms;
-        const employer = state.employer;   // keys are strings
-        const outgoing = state.outgoing;
 
-        const myEmployer = employer[String(myId)];
-        const myOutgoing = outgoing[String(myId)] || [];
+   function liveSendSafe(obj) {
+       try { liveSend(obj); } catch (e) { }
+   }
 
-        const tbody = document.getElementById('firmsBody');
-        tbody.innerHTML = '';
 
-        for (const firm of firms) {
-            const owner = firm.owner;
-            const active = firm.active;
-            const members = firm.members;
-            const pending = firm.pending;
-            const slotsLeft = firm.slots_left;
 
-            const tr = document.createElement('tr');
-            if (!active) tr.classList.add('text-muted');
 
-            const statusText = active ? `Active (slots left: ${slotsLeft})` : 'Inactive (owner employed elsewhere)';
+   function firmOfMe(payload) {
+       const emp = payload.employer?.[String(MY_ID)];
+       return emp ? Number(emp) : null;
+   }
 
-            let actionHtml = '';
-            const iAppliedHere = myOutgoing.includes(owner);
-            const canTryApply = (myEmployer === null) && (owner !== myId) && active;
 
-            if (iAppliedHere) {
-                actionHtml = `<button type="button" class="btn btn-sm btn-secondary" onclick="sendWithdraw(${owner})">Withdraw</button>`;
-            } else if (canTryApply) {
-                actionHtml = `<button type="button" class="btn btn-sm btn-primary" onclick="sendApply(${owner})">Apply</button>`;
-            } else {
-                actionHtml = `<span class="text-muted">—</span>`;
-            }
 
-            let ownerControls = '<span class="text-muted">—</span>';
-            if (owner === myId && active) {
-                if (pending.length === 0) {
-                    ownerControls = '<span class="text-muted">(no applicants)</span>';
-                } else {
-                    ownerControls = pending.map(a => {
-                        return `
-                          <div class="mb-1">
-                            Applicant ${a}
-                            <button type="button" class="btn btn-sm btn-success" onclick="sendAccept(${owner}, ${a})">Accept</button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="sendReject(${owner}, ${a})">Reject</button>
-                          </div>`;
-                    }).join('');
-                }
-            }
 
-            tr.innerHTML = `
-                <td>#${owner}</td>
-                <td>${statusText}</td>
-                <td>${members.join(', ')}</td>
-                <td>${pending.length ? pending.join(', ') : '<span class="text-muted">none</span>'}</td>
-                <td>${actionHtml}</td>
-                <td>${ownerControls}</td>
-            `;
-            tbody.appendChild(tr);
-        }
-    }
+   function isEmployed(payload) {
+       return payload.employer?.[String(MY_ID)] != null;
+   }
 
-    // Make liveRecv explicitly global
-    window.liveRecv = function(data) {
-        if (data.alert) {
-            showAlert(data.alert);
-        }
-        if (data.state) {
-            showAlert('');
-            render(data.state);
-        }
-    }
 
-    // ping for initial state
-    liveSend({type: 'ping'});
+
+
+   function outgoingApps(payload) {
+       return payload.outgoing?.[String(MY_ID)] || [];
+   }
+
+
+
+
+   function findFirm(payload, owner) {
+       return (payload.firms || []).find(f => f.owner === owner);
+   }
+
+
+
+
+   function hasHiredSomeone(payload) {
+       const myFirm = findFirm(payload, MY_ID);
+       return myFirm && myFirm.members.length > 1;
+   }
+
+
+
+
+   function showAlert(msg) {
+       const box = document.getElementById('alertBox');
+       if (!msg) { box.style.display = 'none'; return; }
+       box.textContent = msg;
+       box.style.display = 'block';
+       setTimeout(() => box.style.display = 'none', 3000);
+   }
+
+
+
+
+   function setWaitingMode(payload) {
+       const emp = firmOfMe(payload);
+       const ov = document.getElementById('waitingOverlay');
+       if (emp) {
+           ov.style.display = 'block';
+           document.getElementById('waitingFirm').textContent = `Firm ${emp}`;
+       } else {
+           ov.style.display = 'none';
+       }
+   }
+
+
+
+
+   function renderStatus(payload) {
+       const emp = firmOfMe(payload);
+       const out = outgoingApps(payload);
+
+
+
+
+       let html = `
+    <div><b>Employed by:</b> ${emp ? 'Firm ' + emp : '<span class="muted">Nobody</span>'}</div>
+    <div><b>Outgoing applications:</b> ${out.length ? out.map(o => `<span class="chip">Firm ${o}</span>`).join(' ') : '<span class="muted">None</span>'}</div>
+  `;
+
+
+
+
+       if (out.length && !isEmployed(payload)) {
+           html += `<div class="controls" style="justify-content:flex-start; margin-top:10px;">`;
+           out.forEach(o => {
+               html += `<button type="button" class="btn" onclick="withdraw(${o})">Withdraw Firm ${o}</button>`;
+           });
+           html += `</div>`;
+       }
+
+
+
+
+       document.getElementById('statusBox').innerHTML = html;
+   }
+
+
+
+
+   function openResume(pid) {
+       const hist = STATE.resumes?.[String(pid)] || [];
+       const box = document.getElementById('resumeBox');
+       document.getElementById('resumeHint').style.display = 'none';
+       box.style.display = 'block';
+
+
+
+
+       let html = `<b>Player ${pid}</b><br><br>`;
+       if (!hist.length) { html += '<span class="muted">No history yet.</span>'; box.innerHTML = html; return; }
+
+
+
+
+       html += `<table><thead><tr>
+    <th>Round</th><th>Firm</th><th>Size</th><th>Members</th>
+    <th>Effort</th><th>Payout</th><th>Terminated</th>
+  </tr></thead><tbody>`;
+       hist.slice().reverse().forEach(r => {
+           html += `<tr>
+      <td>${r.round}</td>
+      <td>${r.firm_owner_id || 'Autarky'}</td>
+      <td>${r.firm_size}</td>
+      <td>${r.firm_members}</td>
+      <td>${Number(r.per_capita_effort).toFixed(2)}</td>
+      <td>${Number(r.per_capita_payout).toFixed(2)}</td>
+      <td>${r.was_terminated ? 'Yes' : 'No'}</td>
+    </tr>`;
+       });
+       html += `</tbody></table>`;
+       box.innerHTML = html;
+   }
+
+
+
+
+   function apply(owner) {
+       if (isEmployed(STATE)) return;
+       liveSendSafe({ type: 'apply', owner });
+   }
+
+
+
+
+   function withdraw(owner) {
+       if (isEmployed(STATE)) return;
+       liveSendSafe({ type: 'withdraw', owner });
+   }
+
+
+
+
+   function accept(owner, applicant) {
+       liveSendSafe({ type: 'accept', owner, applicant });
+   }
+
+
+
+
+   function reject(owner, applicant) {
+       liveSendSafe({ type: 'reject', owner, applicant });
+   }
+
+
+
+
+   function firmCard(payload, f) {
+       const inactive = !f.active;
+       const members = f.members || [];
+       const pending = f.pending || [];
+       const alreadyApplied = outgoingApps(payload).includes(f.owner);
+
+
+
+
+       const canApply =
+           !inactive &&
+           f.owner !== MY_ID &&
+           !isEmployed(payload) &&
+           !hasHiredSomeone(payload) &&
+           members.length < MAX_SIZE &&
+           !alreadyApplied;
+
+
+
+
+       let html = `<div class="firm-card ${inactive ? 'inactive' : ''}" ${canApply ? `onclick="apply(${f.owner})"` : ''}>
+    <div class="firm-header">Firm ${f.owner}</div>
+    <div class="firm-body">`;
+
+
+
+
+       members.forEach(pid => {
+           html += `<div class="badge" onclick="event.stopPropagation(); openResume(${pid});">
+      <div class="who">Player ${pid}${pid === MY_ID ? ' (you)' : ''}</div>
+      ${avatarSVG()}
+    </div>`;
+       });
+
+
+
+
+       html += `</div><div class="pending-strip">
+    <div class="pending-title">Pending applicants:</div>
+    <div class="pill-row">`;
+
+
+
+
+       if (!pending.length) html += `<span class="muted">None</span>`;
+       pending.forEach(a => {
+           html += `<div class="badge" onclick="event.stopPropagation(); openResume(${a});">
+      <div class="who">Player ${a}${a === MY_ID ? ' (you)' : ''}</div>
+      ${avatarSVG()}
+      <div class="controls">`;
+           if (f.owner === MY_ID && !inactive) {
+               html += `<button type="button" class="btn" onclick="event.stopPropagation(); accept(${f.owner},${a})">Accept</button>
+               <button type="button" class="btn" onclick="event.stopPropagation(); reject(${f.owner},${a})">Reject</button>`;
+           }
+           if (a === MY_ID && !isEmployed(payload)) {
+               html += `<button type="button" class="btn" onclick="event.stopPropagation(); withdraw(${f.owner})">Withdraw</button>`;
+           }
+           html += `</div></div>`;
+       });
+
+
+
+
+       html += `</div></div></div>`;
+       return html;
+   }
+
+
+
+
+   function render(payload) {
+       STATE = payload;
+       setWaitingMode(payload);
+       renderStatus(payload);
+       document.getElementById('firmGrid').innerHTML =
+           payload.firms.sort((a, b) => a.owner - b.owner).map(f => firmCard(payload, f)).join('');
+   }
+
+
+
+
+   function liveRecv(data) {
+       if (data.alert) showAlert(data.alert);
+       if (data.state) render(data.state);
+   }
+
+
+
+
+   liveSendSafe({ type: 'ping' });
+   setInterval(() => liveSendSafe({ type: 'ping' }), 1500);
+
+
+
+
 </script>
-{{ endblock }}
+{% endblock %} {# closes block content #}
+
+
+
+
+{% block timer %}
+<div style="
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 1000;
+  background: #fff;
+  border: 2px solid #222;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 18px;
+  font-weight: 600;
+">
+   ⏱ Time remaining:
+   <span id="timeLeft"></span>
+</div>
+
+
+<script>
+   (function () {
+       // timeout_seconds is provided by oTree for pages with a timeout
+       let remaining = Number(js_vars.formation_seconds);
+       const el = document.getElementById('timeLeft');
+
+
+       function fmt(s) {
+           s = Math.max(0, Math.floor(s));
+           const m = Math.floor(s / 60);
+           const r = s % 60;
+           return `${m}:${String(r).padStart(2, '0')}`;
+       }
+
+
+       function tick() {
+           if (!el) return;
+           el.textContent = fmt(remaining);
+           remaining -= 1;
+           if (remaining >= 0) setTimeout(tick, 1000);
+       }
+
+
+       tick();
+   })();
+</script>
+{% endblock %}
+
+
+
+
+
+
+{% block next_button %}{% endblock %}
+
