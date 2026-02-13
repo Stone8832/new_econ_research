@@ -154,10 +154,18 @@
 
 
        <div class="slider-row">
-           <input type="range" id="id_effort_to_firm" name="effort_to_firm" min="0" max="{{ C.ENDOWMENT }}" step="1"
-               value="0" oninput="effortOut.value = this.value">
-           <output id="effortOut">0</output>
-       </div>
+    <input
+        type="range"
+        id="id_effort_to_firm"
+        name="effort_to_firm"
+        min="0"
+        max="{{ C.ENDOWMENT }}"
+        step="0.01"
+        value="0"
+    >
+    <output id="effortOut">0.00</output>
+</div>
+
    </div>
 
 
@@ -193,5 +201,21 @@
        a.style.borderColor = `hsl(${hue} 40% 55%)`;
    });
 </script>
+<script>
+  (function () {
+    const input = document.getElementById('id_effort_to_firm');
+    const out = document.getElementById('effortOut');
+
+    function update() {
+      const v = Number(input.value || 0);
+      out.value = v.toFixed(2);
+      out.textContent = v.toFixed(2); // some browsers display <output> via textContent
+    }
+
+    input.addEventListener('input', update);
+    update();
+  })();
+</script>
+
 {{ endblock }}
 

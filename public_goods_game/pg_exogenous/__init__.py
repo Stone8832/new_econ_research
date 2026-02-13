@@ -158,20 +158,22 @@ def creating_session(subsession: Subsession):
 
 
 class Group(BaseGroup):
-   total_effort = models.IntegerField(initial=0)
-   firm_size = models.IntegerField(initial=0)
-   per_capita_effort = models.FloatField(initial=0)
-   per_capita_payout = models.FloatField(initial=0)
+    total_effort = models.FloatField(initial=0)
+    firm_size = models.IntegerField(initial=0)
+    per_capita_effort = models.FloatField(initial=0)
+    per_capita_payout = models.FloatField(initial=0)
+
 
 
 
 
 class Player(BasePlayer):
-   effort_to_firm = models.IntegerField(
-       min=0, max=C.ENDOWMENT,
-       label="How many units of effort do you allocate to your firm"
-   )
-   payoff_points = models.FloatField(initial=0)
+    effort_to_firm = models.FloatField(
+        min=0,
+        max=C.ENDOWMENT,
+        label="How many units of effort do you allocate to your firm?"
+    )
+    payoff_points = models.FloatField(initial=0)
 
 
 def total_points_so_far(player: Player) -> float:
@@ -236,18 +238,24 @@ def total_points_so_far(player: Player) -> float:
 
 
 class ResultsWaitPage(WaitPage):
-   wait_for_all_groups = True
-   template_name = 'pg_exogenous/ResultsWaitPage.html'
-   after_all_players_arrive = set_payoffs_all_groups
+    wait_for_all_groups = True
+    template_name = 'pg_exogenous/ResultsWaitPage.html'
+    after_all_players_arrive = set_payoffs_all_groups
 
+    @staticmethod
+    def vars_for_template(player: Player):
+        effort_to_firm = float(player.effort_to_firm or 0.0)
+        effort_to_firm = round(effort_to_firm, 2)
 
-   @staticmethod
-   def vars_for_template(player: Player):
-       effort_kept = C.ENDOWMENT - player.effort_to_firm
-       return dict(
-           effort_kept=effort_kept,
-           total_points_so_far=total_points_so_far(player),
-       )
+        effort_kept = round(C.ENDOWMENT - effort_to_firm, 2)
+
+        return dict(
+            effort_kept=effort_kept,  # numeric (if you ever need it)
+            effort_to_firm_disp=f"{effort_to_firm:.2f}",
+            effort_kept_disp=f"{effort_kept:.2f}",
+            total_points_so_far=total_points_so_far(player),
+        )
+
 
 
 
@@ -262,56 +270,79 @@ class Tutorial(Page):
 
 
 class Decision(Page):
-   form_model = 'player'
-   form_fields = ['effort_to_firm']
-   timeout_seconds = C.DECISION_SECONDS
-   timeout_submission = {'effort_to_firm': 0}
+    form_model = 'player'
+    form_fields = ['effort_to_firm']
+    timeout_seconds = C.DECISION_SECONDS
+    timeout_submission = {'effort_to_firm': 0.0}
 
+    @staticmethod
+    def vars_for_template(player: Player):
+        return dict(
+            total_points_so_far=total_points_so_far(player),
+        )
 
-   @staticmethod
-   def vars_for_template(player: Player):
-       return dict(
-           total_points_so_far=total_points_so_far(player),
-       )
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        # Enforce 2 decimals (and avoid float artifacts like 7.999999)
+        player.effort_to_firm = round(float(player.effort_to_firm or 0.0), 2)
+
+    @staticmethod
+    def error_message(player: Player, values):
+        # Optional but recommended: enforce 0.01 grid even if someone hacks the HTML
+        x = values.get('effort_to_firm')
+        if x is None:
+            return
+        if abs(x - round(x, 2)) > 1e-9:
+            return "Please choose effort in increments of 0.01."
 
 
 
 
 class Results(Page):
-   timeout_seconds = 30
+    timeout_seconds = 30
 
+    @staticmethod
+    def vars_for_template(player: Player):
+        group = player.group
 
-   @staticmethod
-   def vars_for_template(player: Player):
-       group = player.group
+        # Always work with rounded effort to avoid float artifacts
+        effort_to_firm = round(float(player.effort_to_firm or 0.0), 2)
+        effort_kept = round(C.ENDOWMENT - effort_to_firm, 2)
 
+        total_firm_effort = float(group.total_effort or 0.0)
+        firm_size = group.firm_size
+        per_capita_payout = float(group.per_capita_payout or 0.0)
 
-       effort_to_firm = player.effort_to_firm
-       effort_kept = C.ENDOWMENT - effort_to_firm
+        total_payoff = float(player.payoff or 0.0)
+        selfish_payoff = effort_kept
+        payoff_if_zero = C.ENDOWMENT + per_capita_payout
+        personal_cost = payoff_if_zero - total_payoff
 
+        # Display strings (2 decimals everywhere)
+        def fmt2(x):
+            return f"{float(x or 0.0):.2f}"
 
-       total_firm_effort = group.total_effort
-       firm_size = group.firm_size
-       per_capita_payout = group.per_capita_payout
+        return dict(
+            effort_to_firm=effort_to_firm,
+            effort_kept=effort_kept,
+            selfish_payoff=selfish_payoff,
+            total_firm_effort=total_firm_effort,
+            firm_size=firm_size,
+            per_capita_payout=per_capita_payout,
+            total_payoff=total_payoff,
+            personal_cost=personal_cost,
+            total_points_so_far=total_points_so_far(player),
 
+            # formatted versions for templates
+            effort_to_firm_disp=fmt2(effort_to_firm),
+            effort_kept_disp=fmt2(effort_kept),
+            selfish_payoff_disp=fmt2(selfish_payoff),
+            total_firm_effort_disp=fmt2(total_firm_effort),
+            per_capita_payout_disp=fmt2(per_capita_payout),
+            total_payoff_disp=fmt2(total_payoff),
+            personal_cost_disp=fmt2(personal_cost),
+        )
 
-       total_payoff = player.payoff
-       selfish_payoff = effort_kept
-       payoff_if_zero = C.ENDOWMENT + per_capita_payout
-       personal_cost = payoff_if_zero - total_payoff
-
-
-       return dict(
-           effort_to_firm=effort_to_firm,
-           effort_kept=effort_kept,
-           selfish_payoff=selfish_payoff,
-           total_firm_effort=total_firm_effort,
-           firm_size=firm_size,
-           per_capita_payout=per_capita_payout,
-           total_payoff=total_payoff,
-           personal_cost=personal_cost,
-           total_points_so_far=total_points_so_far(player),
-       )
 
 
 

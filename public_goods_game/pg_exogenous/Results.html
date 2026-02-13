@@ -143,7 +143,7 @@
                </div>
                <div class="pill">points</div>
            </div>
-           <div class="big">{{ total_payoff }}</div>
+           <div class="big">{{ total_payoff_disp }}</div>
 
 
            <div class="bar" aria-hidden="true">
@@ -161,19 +161,19 @@
 
            <div class="row">
                <div class="label">You put into the firm</div>
-               <div class="val">{{ effort_to_firm }}</div>
+               <div class="val">{{ effort_to_firm_disp }}</div>
            </div>
 
 
            <div class="row">
                <div class="label">You kept for yourself</div>
-               <div class="val">{{ effort_kept }}</div>
+               <div class="val">{{ effort_kept_disp }}</div>
            </div>
 
 
            <div class="row">
                <div class="label">Self payoff (guaranteed)</div>
-               <div class="val">{{ selfish_payoff }} pts</div>
+               <div class="val">{{ selfish_payoff_disp }} pts</div>
            </div>
 
 
@@ -195,13 +195,13 @@
 
        <div class="row">
            <div class="label">Total firm effort (all members)</div>
-           <div class="val">{{ total_firm_effort }}</div>
+           <div class="val">{{ total_firm_effort_disp }}</div>
        </div>
 
 
        <div class="row">
            <div class="label">Firm payout per person</div>
-           <div class="val">{{ per_capita_payout }} pts</div>
+           <div class="val">{{ per_capita_payout_disp }} pts</div>
        </div>
 
 
@@ -220,7 +220,7 @@
        <div class="callout">
            <div class="row" style="border-bottom:none; padding: 6px 0;">
                <div class="label">Your personal “cost” of contributing</div>
-               <div class="val">{{ personal_cost }} pts</div>
+               <div class="val">{{ personal_cost_disp }} pts</div>
            </div>
            <div class="sub">
                This is how many points you gave up by contributing to the firm instead of keeping that effort for
@@ -243,7 +243,7 @@
 <script>
    // Soft progress bar: scales payoff against a reasonable max
    // max-ish = endowment + (2.5 * endowment) (approx upper bound per-capita payout)
-   const payoff = Number("{{ total_payoff }}");
+   const payoff = Number("{{ total_payoff_disp }}");
    const softMax = Number("{{ C.ENDOWMENT }}") + 2.5 * Number("{{ C.ENDOWMENT }}");
    const pct = Math.max(0, Math.min(100, (payoff / softMax) * 100));
    const fill = document.getElementById('payFill');

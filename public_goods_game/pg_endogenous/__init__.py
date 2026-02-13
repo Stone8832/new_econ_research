@@ -703,13 +703,31 @@ class Relay(Page):
    def vars_for_template(player: Player):
        rows = []
        for g in player.subsession.get_groups():
+           players = g.get_players()
+
+           # In endogenous formation, each member of a firm has firm_owner_id set to the
+           # owner's id_in_subsession. Autarky (unmatched) players have firm_owner_id == 0.
+           owner_ids = {p.firm_owner_id for p in players}
+
+           if owner_ids == {0}:
+               # Autarky group. Include the player id so multiple autarkies are distinguishable.
+               owner_id = 0
+               owner_label = f"Autarky (P{players[0].id_in_subsession})"
+           else:
+               owner_ids.discard(0)
+               owner_id = sorted(owner_ids)[0] if owner_ids else 0
+               owner_label = f"P{owner_id}" if owner_id else "Autarky"
+
            rows.append(dict(
-               firm_size=len(g.get_players()),
+               firm_owner_id=owner_id,
+               firm_owner_label=owner_label,
+               firm_size=len(players),
                per_capita_effort=g.per_capita_effort,
                per_capita_payout=g.per_capita_payout,
            ))
-       rows.sort(key=lambda r: r['firm_size'])
+       rows.sort(key=lambda r: (r['firm_size'], r['firm_owner_id']))
        return dict(rows=rows)
+
 
 
 
