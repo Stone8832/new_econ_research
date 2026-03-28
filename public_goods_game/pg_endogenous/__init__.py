@@ -79,7 +79,11 @@ class Player(BasePlayer):
    was_terminated = models.BooleanField(initial=False)
 
 
-
+def total_points_so_far(player: Player) -> float:
+    total = 0.0
+    for r in range(1, player.round_number):
+        total += float(player.in_round(r).payoff)
+    return total
 
 
 
@@ -610,7 +614,11 @@ class Tutorial(Page):
 class Formation(Page):
    live_method = live_formation
 
-
+   @staticmethod
+   def vars_for_template(player: Player):
+       return dict(
+           total_points_so_far=total_points_so_far(player),
+       )
    @staticmethod
    def get_timeout_seconds(player: Player):
        # let you shorten in test sessions
@@ -655,13 +663,14 @@ class FormationWaitPage(WaitPage):
 
 
 class FirmAssignment(Page):
-   @staticmethod
-   def vars_for_template(player: Player):
-       return dict(
-           is_autarkic=(len(player.group.get_players()) == 1),
-           firm_owner_id=player.firm_owner_id,
-           members=[p.id_in_subsession for p in player.group.get_players()],
-       )
+    @staticmethod
+    def vars_for_template(player: Player):
+        return dict(
+            is_autarkic=(len(player.group.get_players()) == 1),
+            firm_owner_id=player.firm_owner_id,
+            members=[p.id_in_subsession for p in player.group.get_players()],
+            total_points_so_far=total_points_so_far(player),
+        )
 
 
 
@@ -672,6 +681,11 @@ class Decision(Page):
    form_fields = ['effort_to_firm']
    timeout_submission = dict(effort_to_firm=0.0)
 
+   @staticmethod
+   def vars_for_template(player: Player):
+       return dict(
+           total_points_so_far=total_points_so_far(player),
+       )
 
    @staticmethod
    def is_displayed(player: Player):
@@ -691,59 +705,92 @@ class Decision(Page):
 
 
 class ResultsWaitPage(WaitPage):
-   after_all_players_arrive = set_payoffs
+    template_name = 'pg_endogenous/ResultsWaitPage.html'
+    after_all_players_arrive = set_payoffs
 
+    @staticmethod
+    def vars_for_template(player: Player):
+        is_autarkic = len(player.group.get_players()) == 1
+        effort_to_firm = float(player.effort_to_firm or 0.0)
+        effort_kept = C.ENDOWMENT if is_autarkic else (C.ENDOWMENT - effort_to_firm)
+
+        return dict(
+            total_points_so_far=total_points_so_far(player),
+            is_autarkic=is_autarkic,
+            effort_to_firm_disp=f"{effort_to_firm:.2f}",
+            effort_kept_disp=f"{effort_kept:.2f}",
+            endowment_disp=f"{float(C.ENDOWMENT):.2f}",
+        )
 
 
 
 class Results(Page):
-   @staticmethod
-   def vars_for_template(player: Player):
-       return dict(
-           is_autarkic=(len(player.group.get_players()) == 1),
-           firm_size=len(player.group.get_players()),
-           members=[p.id_in_subsession for p in player.group.get_players()],
-       )
+    @staticmethod
+    def vars_for_template(player: Player):
+        return dict(
+            is_autarkic=(len(player.group.get_players()) == 1),
+            firm_size=len(player.group.get_players()),
+            members=[p.id_in_subsession for p in player.group.get_players()],
+            total_points_so_far=total_points_so_far(player),
+        )
 
 
 
 
 class Relay(Page):
-   timeout_seconds = C.INFO_SECONDS
+    timeout_seconds = C.INFO_SECONDS
 
+    @staticmethod
+    def vars_for_template(player: Player):
+        rows = []
+        for g in player.subsession.get_groups():
+            players = g.get_players()
 
-   @staticmethod
-   def vars_for_template(player: Player):
-       rows = []
-       for g in player.subsession.get_groups():
-           players = g.get_players()
+            owner_ids = {p.firm_owner_id for p in players}
 
-           # In endogenous formation, each member of a firm has firm_owner_id set to the
-           # owner's id_in_subsession. Autarky (unmatched) players have firm_owner_id == 0.
-           owner_ids = {p.firm_owner_id for p in players}
+            if owner_ids == {0}:
+                owner_id = 0
+                owner_label = f"Autarky (P{players[0].id_in_subsession})"
+            else:
+                owner_ids.discard(0)
+                owner_id = sorted(owner_ids)[0] if owner_ids else 0
+                owner_label = f"P{owner_id}" if owner_id else "Autarky"
 
-           if owner_ids == {0}:
-               # Autarky group. Include the player id so multiple autarkies are distinguishable.
-               owner_id = 0
-               owner_label = f"Autarky (P{players[0].id_in_subsession})"
-           else:
-               owner_ids.discard(0)
-               owner_id = sorted(owner_ids)[0] if owner_ids else 0
-               owner_label = f"P{owner_id}" if owner_id else "Autarky"
+            rows.append(dict(
+                firm_owner_id=owner_id,
+                firm_owner_label=owner_label,
+                firm_size=len(players),
+                per_capita_effort=g.per_capita_effort,
+                per_capita_payout=g.per_capita_payout,
+            ))
+        rows.sort(key=lambda r: (r['firm_size'], r['firm_owner_id']))
+        return dict(
+            rows=rows,
+            total_points_so_far=total_points_so_far(player),
+        )
 
-           rows.append(dict(
-               firm_owner_id=owner_id,
-               firm_owner_label=owner_label,
-               firm_size=len(players),
-               per_capita_effort=g.per_capita_effort,
-               per_capita_payout=g.per_capita_payout,
-           ))
-       rows.sort(key=lambda r: (r['firm_size'], r['firm_owner_id']))
-       return dict(rows=rows)
+class FinalSummary(Page):
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.round_number == C.NUM_ROUNDS
 
+    @staticmethod
+    def vars_for_template(player: Player):
+        total_points = sum(float(p.payoff) for p in player.in_all_rounds())
 
+        payout_per_point = float(player.session.config.get('payout_per_point', 0.09))
+        participation_fee = float(player.session.config.get('participation_fee', 10))
 
+        earnings_dollars = total_points * payout_per_point
+        total_payment = earnings_dollars + participation_fee
 
+        return dict(
+            total_points=f"{total_points:.2f}",
+            payout_per_point=f"{payout_per_point:.2f}",
+            earnings_dollars=f"{earnings_dollars:.2f}",
+            participation_fee=f"{participation_fee:.2f}",
+            total_payment=f"{total_payment:.2f}",
+        )
 
 page_sequence = [
    Tutorial,
@@ -754,6 +801,7 @@ page_sequence = [
    ResultsWaitPage,
    Results,
    Relay,
+   FinalSummary
 ]
 
 

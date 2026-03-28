@@ -1,103 +1,122 @@
 {{ block title }}Tutorial{{ endblock }}
+
 {{ block content }}
 
-<p>
-    You will play {{ C.NUM_ROUNDS }} rounds. In each round, you begin with a firm formation stage.
-    Unlike Treatments 1 and 2, firms are <strong>endogenously formed</strong>: each participant can
-    potentially own a firm, apply to other firms, and be accepted or rejected.
-</p>
+<div class="card bg-light mb-3">
+    <div class="card-body">
 
-<h4>Firm formation</h4>
+        <p>
+            You will play <strong>{{ C.NUM_ROUNDS }} rounds</strong>. In each round, you first go through a
+            <strong>firm formation stage</strong>. Unlike Treatments 1 and 2, firms are formed
+            <strong>endogenously</strong>: you may apply to other firms, accept applicants into your own firm,
+            or remain alone.
+        </p>
+
+        <h3>Your firm formation each round</h3>
+        <ul>
+            <li>You begin each round as the potential owner of your own firm.</li>
+            <li>You may apply to another participant’s firm by clicking their firm icon.</li>
+            <li>If your application is accepted, that acceptance is binding for the round.</li>
+            <li>If you accept an applicant into your firm, you are committed to operating that firm and may no longer apply elsewhere.</li>
+            <li>If you are accepted into another firm, your own firm becomes inactive for that round.</li>
+            <li>Applications still pending when firm formation ends are automatically rejected.</li>
+            <li>Firm size is capped at <strong>{{ C.MAX_FIRM_SIZE }}</strong>.</li>
+        </ul>
+
+        <h3>Autarky</h3>
+        <p>
+            If you are not employed by another firm and no one joins your own firm, you remain alone
+            (<strong>autarky</strong>) for that round. In autarky, you simply keep your
+            <strong>{{ C.ENDOWMENT }}</strong> effort units and earn <strong>{{ C.ENDOWMENT }}</strong> points.
+        </p>
+
+        <h3>Your decision each round</h3>
+        <p>
+            If you are in a firm with other members, you receive <strong>{{ C.ENDOWMENT }}</strong> effort units
+            and choose how many units to put into the <strong>firm</strong>. The rest you keep for yourself.
+        </p>
+
+        <ul>
+            <li><strong>Effort kept for yourself</strong> earns <strong>1 point per unit</strong>.</li>
+            <li><strong>Firm effort</strong> is added up across your firm, and the firm’s payoff is
+                <strong>shared equally</strong> among firm members.</li>
+            <li>Your individual contribution is <strong>not shown directly</strong> to other players.</li>
+        </ul>
+
+        <h3>How the firm payoff works</h3>
+        <p>
+            In some sessions, the return per unit follows the constant-return schedule below:
+        </p>
+
+        <table class="table table-sm table-bordered" style="max-width: 700px;">
+            <thead>
+                <tr>
+                    <th>Firm size</th>
+                    <th>Per-person return (α) per firm unit</th>
+                    <th>Total return (α × n)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>2</td><td>0.65</td><td>1.30</td></tr>
+                <tr><td>3</td><td>0.55</td><td>1.65</td></tr>
+                <tr><td>4</td><td>0.49</td><td>1.96</td></tr>
+                <tr><td>5</td><td>0.45</td><td>2.24</td></tr>
+                <tr><td>6</td><td>0.42</td><td>2.50</td></tr>
+            </tbody>
+        </table>
+
+        <p>
+            In other sessions, the firm payoff has <strong>increasing returns to scale within the firm</strong>,
+            so higher total firm effort raises total output disproportionately.
+        </p>
+
+        <h3>Resume information</h3>
+<p>
+    During the <strong>firm formation</strong> stage, you can view every participant’s public resume
+    before deciding where to apply or whom to hire.
+</p>
 
 <ul>
-    <li>You begin each round as the potential owner of your own firm.</li>
-    <li>You may apply to another participant’s firm by clicking their firm icon.</li>
-    <li>If your application is accepted, that acceptance is binding for the round.</li>
-    <li>If you are accepted into another firm, your own firm becomes inactive for that round.</li>
-    <li>If you accept an applicant into your firm, you are committed to operating that firm and may no longer apply elsewhere in that round.</li>
-    <li>Applications that are still pending when firm formation ends are automatically rejected.</li>
-    <li>Firm size is capped at {{ C.MAX_FIRM_SIZE }}.</li>
+    <li><strong>To open a resume:</strong> click that participant’s <strong>player badge</strong> on the firm formation screen.</li>
+    <li><strong>To apply to a firm:</strong> click the <strong>firm tile</strong>, not the player badge.</li>
+    <li>The resume helps you decide whether a participant looks like a good firm member or a risky hire.</li>
 </ul>
 
-<h4>Autarky</h4>
-
 <p>
-    If you are not employed by another firm and no one joins your own firm, you remain alone (autarky)
-    for that round. In autarky, you simply keep your {{ C.ENDOWMENT }} effort units and earn
-    {{ C.ENDOWMENT }} points.
-</p>
-
-<h4>Your decision each round</h4>
-
-<p>
-    If you are in a firm with other members, you receive {{ C.ENDOWMENT }} effort units and choose how
-    many units to put into the firm. The rest you keep for yourself.
-</p>
-
-<ul>
-    <li>Effort kept for yourself earns 1 point per unit.</li>
-    <li>Firm effort is added up across all members of the firm.</li>
-    <li>The firm’s payoff is shared equally among firm members, including you.</li>
-    <li>Your individual contribution is not directly shown to other players.</li>
-</ul>
-
-<h4>How firm payoffs work</h4>
-
-<p>
-    In some sessions, payoffs use the constant-return schedule from the exogenous treatments:
-</p>
-
-<table class="table table-sm table-bordered" style="max-width: 520px;">
-    <thead>
-        <tr>
-            <th>Firm size</th>
-            <th>Per-person return (α) per firm unit</th>
-            <th>Total return (α × n)</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr><td>2</td><td>0.65</td><td>1.30</td></tr>
-        <tr><td>3</td><td>0.55</td><td>1.65</td></tr>
-        <tr><td>4</td><td>0.49</td><td>1.96</td></tr>
-        <tr><td>5</td><td>0.45</td><td>2.24</td></tr>
-        <tr><td>6</td><td>0.42</td><td>2.50</td></tr>
-    </tbody>
-</table>
-
-<p>
-    In other sessions, the firm payoff has <strong>increasing returns to scale within the firm</strong>:
-    higher total firm effort leads to disproportionately higher total firm output, which is then shared equally.
-</p>
-
-<h4>Resume information</h4>
-
-<p>
-    Every participant has a public resume showing their prior firm history, including:
+    A participant’s resume shows their history from prior rounds, including:
 </p>
 
 <ul>
     <li>which firm they worked in,</li>
-    <li>the members of that firm,</li>
+    <li>who the members of that firm were,</li>
     <li>firm size,</li>
-    <li>per-capita effort,</li>
-    <li>per-capita payout,</li>
-    <li>and whether they were terminated by a prior employer.</li>
+    <li>per-capita effort in that firm,</li>
+    <li>per-capita payout in that firm,</li>
+    <li>and whether they were <strong>terminated by a prior employer</strong>.</li>
 </ul>
-
-<h4>Timing</h4>
-
-<ul>
-    <li>You have {{ C.FORMATION_SECONDS }} seconds for firm formation.</li>
-    <li>You then have {{ C.DECISION_SECONDS }} seconds to choose your effort allocation.</li>
-    <li>If time runs out on the decision page, your firm contribution is set to 0.</li>
-    <li>After decisions are made, there is a {{ C.INFO_SECONDS }}-second information screen.</li>
-</ul>
-
-<h4>Payments</h4>
 
 <p>
-    You earn points during the experiment. Points are converted to cash at the end.
+    Termination information works as follows: if a participant worked for a firm in the previous round
+    and that same employer rejects them in the next round <strong>while continuing to operate</strong>,
+    that rejection appears on the participant’s resume as a termination. Ordinary failed applications do
+    not all appear there; the resume highlights prior-employer terminations specifically.
 </p>
+
+        <h3>Timing</h3>
+        <ul>
+            <li>You have <strong>{{ C.FORMATION_SECONDS }}</strong> seconds for firm formation.</li>
+            <li>You then have <strong>{{ C.DECISION_SECONDS }}</strong> seconds to choose your effort allocation.</li>
+            <li>If time runs out on the decision page, your firm contribution is set to <strong>0</strong>.</li>
+            <li>After each round, there is a <strong>{{ C.INFO_SECONDS }}</strong>-second information screen.</li>
+        </ul>
+
+        <h3>Payments</h3>
+        <p>
+            You earn points during the experiment. Points are converted to cash at the end.
+        </p>
+
+    </div>
+</div>
 
 {{ next_button }}
 

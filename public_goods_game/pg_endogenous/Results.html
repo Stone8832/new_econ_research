@@ -1,6 +1,6 @@
 {{ block title }}Results{{ endblock }}
 {{ block content }}
-
+{{ include "pg_endogenous/_scorebar.html" }}
 {% if is_autarkic %}
   <p><b>You are autarkic this period.</b> You earn {{ C.ENDOWMENT }} points.</p>
 {% else %}
